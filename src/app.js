@@ -1,19 +1,27 @@
 
 const express = require("express");
+const connectDB = require("./config/database")
 const app = express();
-const {adminAuth}= require('./midelware/auth')
-app.use("/admin/getAllData",adminAuth , (req, res) => {
-  res.send("user not verifyed")
+const User = require("./models/user");
+
+app.use(express.json());
+
+app.post("/signup-user", async (req , res) => {
+
+  // creating a new instance of the UserModel
+  const user = new User(req.body);
+  
+
+  await user.save();
+  res.send("User Added Succesfully001")
 });
 
-app.use("/admin/getAllData", (req, res) => {
-  res.send("user verifyed")
+connectDB().then(()=>{
+  console.log("DataBase Connected SuccesFully");
+  app.listen(7777, () => {
+    console.log("server ok hai...")
+  });
+
+}).catch((err)=>{
+  console.error("Database cannot be connected!!")
 })
-// app.use("/admin/getDeleteData", (req, res) => {
-//   res.send("user delete")
-// })
-app.listen(7777, () => {
-  console.log("server ok hai...")
-});
-
-// in this way i have to create multiple routes
