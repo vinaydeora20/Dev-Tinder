@@ -3,65 +3,43 @@ const express = require("express");
 const connectDB = require("./config/database")
 const app = express();
 const User = require("./models/user");
-
+const bcrypt = require("bcrypt");
+const { validateSignUpData } = require("./utils/validation")
 app.use(express.json());
 // signup API
 app.post("/signup-user", async (req, res) => {
-  // creating a new instance of the UserModel
-  const user = new User(req.body);
-  await user.save();
-  console.log('User00', User)
-  res.send("User Added Succesfully001")
-});
-
-// get single record by emailId
-app.get("/single-user", async (req, res) => {
-  const userEmail = req.body.emailId
   try {
-    const users = await User.find({ emailId: userEmail })
-    res.send(users);
+   
+    //1. validate the data
+    validateSignUpData(req);
+    const {  firstName,lastName, emailId,password} = req.body;
+    //2.  encrypt the password
+    const passwordHash = await bcrypt.hash(password, 10);
+    // create new instance of user model
+    // const user = new User(req.body);
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password:passwordHash
+    })
+
+    await user.save();
+    res.send("new User SignUp succesfully")
   } catch (err) {
-    res.status(400).send("somthing went wrong");
+    res.status(400).send("somthing went wrong" + err.message);
   }
 });
 
-// get all record 
-app.get("/feed", async (req, res) => {
-  // const user
+app.post("/login", async (req, res) => {
+  const user = req.body;
   try {
-    const users = await User.find({})
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("somthing went wrong");
-  }
-});
-
-app.delete("/user-delete", async (req, res) => {
-  const userId = req.body.userId;
-  try {
-    const user = await User.findByIdAndDelete({ _id: userId });
-    //  const user = await User.findByIdAndDelete({ userId });
-    res.send("user Delete succesfully");
 
   } catch (err) {
-    res.status(400).send("somthing went wrong");
+    res.status(400).send("somthing went wrong")
   }
-});
+})
 
-app.patch("/user-update", async (req, res) => {
-  const userId = req.body.userId;
-    const data = req.body;
-
-  try {
-    const user = await User.findByIdAndUpdate({ _id: userId });
-    //  const user = await User.findByIdAndDelete({ userId });
-    console.log(user)
-    res.send("user update succesfully");
-
-  } catch (err) {
-    res.status(400).send("somthing went wrong");
-  }
-});
 
 connectDB().then(() => {
   console.log("DataBase Connected SuccesFully");
