@@ -23,8 +23,14 @@ const userSchema = new mongoose.Schema({
           throw new Error("invalid Email address" + value)
         }
        }
-    },  
+    }, 
+    about:{
+       type : String,
+    } ,
       password :{
+       type : String,
+    },
+       photoUrl :{
        type : String,
     },
       age :{
@@ -33,6 +39,10 @@ const userSchema = new mongoose.Schema({
       gender :{
        type : String,
     },
+        skills: {
+        type: [String], // Array of strings
+        default: []     // Default empty array
+    }
 });
 module.exports = mongoose.model("User", userSchema);
 

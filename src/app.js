@@ -2,45 +2,31 @@
 const express = require("express");
 const connectDB = require("./config/database")
 const app = express();
-const User = require("./models/user");
-const bcrypt = require("bcrypt");
-const { validateSignUpData } = require("./utils/validation")
+
+const cookieParser = require("cookie-parser");
+
+
 app.use(express.json());
-// signup API
-app.post("/signup-user", async (req, res) => {
-  try {
-   
-    //1. validate the data
-    validateSignUpData(req);
-    const {  firstName,lastName, emailId,password} = req.body;
-    //2.  encrypt the password
-    const passwordHash = await bcrypt.hash(password, 10);
-    // create new instance of user model
-    // const user = new User(req.body);
-    const user = new User({
-      firstName,
-      lastName,
-      emailId,
-      password:passwordHash
-    })
+app.use(cookieParser());
 
-    await user.save();
-    res.send("new User SignUp succesfully")
-  } catch (err) {
-    res.status(400).send("somthing went wrong" + err.message);
-  }
-});
+// Now i need to import my all express router here 
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+// Express Routing Flow:
+// ---------------------
+// 1. Routes are checked in the order they are defined (top to bottom).
+// 2. When a request comes in (e.g., '/login'):
+//    - First, it checks inside 'authRouter' for a matching route.
+//    - If found, it handles the request and stops further checks.
+//    - If not found, it moves to the next router ('profileRouter').
+// 3. The process repeats until a matching route is found or all routers are checked.
+// Note: The order of 'app.use()' matters since the first match wins.
 
-app.post("/login", async (req, res) => {
-  const user = req.body;
-  try {
-
-  } catch (err) {
-    res.status(400).send("somthing went wrong")
-  }
-})
-
-
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter); 
+// create dataBase connection and server created on port 7777:
 connectDB().then(() => {
   console.log("DataBase Connected SuccesFully");
   app.listen(7777, () => {
