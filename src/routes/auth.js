@@ -18,7 +18,7 @@ authRouter.post("/signup-user", async (req, res) => {
 
     //1. validate the data
     validateSignUpData(req);
-    const { firstName, lastName, emailId, password } = req.body;
+    const { firstName, lastName, emailId, password, about, skills, age, } = req.body;
     //2.  encrypt the password
     const passwordHash = await bcrypt.hash(password, 10);
     // create new instance of user model
@@ -27,7 +27,11 @@ authRouter.post("/signup-user", async (req, res) => {
       firstName,
       lastName,
       emailId,
-      password: passwordHash
+      password: passwordHash,
+      about,
+      skills,
+      age,
+
     })
 
     await user.save();
@@ -37,37 +41,50 @@ authRouter.post("/signup-user", async (req, res) => {
   }
 });
 
-// Login APi:
+// Login API Endpoint - Handles user authentication
 authRouter.post("/login", async (req, res) => {
 
   try {
+    // STEP 1: Extract credentials from request body
     const { password, emailId } = req.body;
+    // STEP 2: Check if user exists in database
     const user = await User.findOne({ emailId: emailId })
     if (!user) {
-      throw new Error("Email not valid");
+      throw new Error("Email not valid");// User not found with this email
     } else {
-      console.log('user myyyyy', user)
+      console.log('User found:', user); // Logging for debugging
     }
 
+    // STEP 3: Verify password
+    // Compare provided password with hashed password in database
     const isValidPassword = await bcrypt.compare(password, user.password);
+
     if (isValidPassword) {
-      const token = await jwt.sign({ _id: user._id }, "vinay@tinder$789" ,{expiresIn:"1d"})
+      // STEP 4: Create JWT token if password is correct
+      // Token contains user ID and is signed with secret key
+      const token = await jwt.sign(
+        { _id: user._id },     // Payload (user identifier)
+        "vinay@tinder$789",    // Secret key for signing
+        { expiresIn: "1d" }    // Token expires in 1 day
+      )
       // console.log(token)
       // res.cookie("token", "dsjbfhjdsfhdsklfhkdwhfugfgewuibferwfiberncdsknckzshdhasdladskdwhfugfgewuibferwfiberncdsknckzkd")
-      res.cookie("token", token);
-      res.send("login SuccesFull");
+      // STEP 5: Set token as HTTP-only cookie
+      res.cookie("token", token);    // Stores token in client's cookies
+      res.send("login SuccesFull");  // Success response
     } else {
-      throw new Error("password Not Correct")
+      throw new Error("password Not Correct"); // Password mismatch
     }
   } catch (err) {
+    // Error Handling: Send 400 status with error message
     res.status(400).send("ERROR :" + err.message)
   }
 });
 // Logout Api:
-authRouter.post("/logout", async (req, res)=>{
+authRouter.post("/logout", async (req, res) => {
   // Logic to logout: we will directly expire the cookies when logout api hits:
   res.cookie("token", null, {
-    expires:new Date(Date.now()),
+    expires: new Date(Date.now()),
   })
   res.send("Logout succesfull")
 })

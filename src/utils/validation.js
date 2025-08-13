@@ -12,16 +12,19 @@ const validateSignUpData = (req) => {
         throw new Error("password is not strong");
     }
 }
-
-// const validateEditProfileData = (req) => {
-//     allowedUserEditFields = ["firstName", "lastName"];
-//     const isEditAllowed = Object.keys(req.body).every((field) =>
-//         allowedUserEditFields.includes(field)
-//     );
-//     return isEditAllowed;
-// }
+// Function to validate which profile fields can be edited
+const validateEditProfileData = (req) => {
+     // List of allowed fields that users can update
+    const allowedEditFields = ["firstName", "lastName", "emailId","age", "photoUrl", "gender", "about", "skills"];
+     // Check if EVERY field in the req.body exists in allowedEditFields
+    const isEditAllowed = Object.keys(req.body).every((field)=>
+    allowedEditFields.includes(field)
+    );
+     // Returns true if all fields are allowed, false if any field is not allowed
+    return isEditAllowed;
+}
 
 module.exports = {
     validateSignUpData,
-    // validateEditProfileData,
+    validateEditProfileData,
 }

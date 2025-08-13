@@ -3,6 +3,7 @@ const requestRouter = express.Router();
 
 const { userAuth } = require("../midelware/auth");
 const ConnectionRequest = require("../models/connectionRequest");
+const user = require("../models/user");
 
 requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) => {
 
@@ -19,11 +20,17 @@ requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) =
             // with an error message indicating the invalid status
             return res.status(400).json({ message: "invalid status Type " + status })
         }
-
-        // 2. Check if a connection request already exists between these users
+        // 2.Ensure the target user (toUserId) exists in our database , Prevents sending connection requests to non-existent users
+        const toUser = await user.findById(toUserId);
+        if(!toUser){
+        return res.status(404).json({
+        message: "Target user not found - connection request failed"
+        });
+        }
+        // 3. Check if a connection request already exists between these users
         // We look for either:
-        // i. Any existing request where the fromUserId is the current toUserId (reverse request)
-        // ii. An exact match where fromUserId and toUserId match the provided pair
+        // => Any existing request where the fromUserId is the current toUserId (reverse request)
+        // => An exact match where fromUserId and toUserId match the provided pair
         const existingConnectionRequest = await ConnectionRequest.findOne({
             $or: [
                 // {fromUserId , toUserId}, // Case 1: Reverse request exists
